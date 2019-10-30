@@ -20,7 +20,9 @@ var { User, Group, Cont, Msg} = require('../model/index')
 
 var bodyparser = require('body-parser')
 
+const cookieParser = require('cookie-parser')
 
+app.use(cookieParser())
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({extended:false}));
 
@@ -41,7 +43,7 @@ exports.signup = (req, res, next) => {
             })  
                 
         }
-    })  
+    })
    
 }
 
@@ -52,10 +54,8 @@ exports.getall = (req, res, next) => {
     User.findAll() .then(user => {
         console.log(user)
         res.send(user)
-    }
-      
-    )
-        
+    }      
+    )       
 }
 
 
@@ -85,48 +85,76 @@ exports.login = (req,res, next) => {
         bcrypt.compare(req.body.password, user.password, (err, result) =>{
             if(err){
                 return res.status(401) .json({
-
-                    message: 'auth failed to login user',
-
+                    //message: 'auth failed to login user',
                     message: 'auth failed to login user due to insufficient or bad credentials'
 
                 })
             } 
             else  {
-               const token =  jwt.sign({
-                   email: user.email,
+               const token =  jwt.sign({                   
                    handle: user.handle                   
                },
-               'secret',
-               { expiresIn: "10h"},
+               'nosayaba',
+               { expiresIn: 0},
                );
 
 
-                res.cookie('jwt', token,{httpOnly:true, secure:true });
+                res.cookie('token', token,{ expires:0 }); 
+                console.log(req.cookies)
                 res.status(200) .json({
                     message: 'auth successful for',
                     token: token,
                 }) 
-            }
-            
-           
-       
+                
+            }     
         
-    })
-   /*  .catch(err =>{
-        console.log(err);
-        res.status(500) .json({
-            error: err,
-        })
-    }); */
+    }) 
 })
 
 }
-/* 
 
-exports.addtogroup = (req,res, next) =>{
-    Group
 
+exports.gameGroup = (req,res,next) => {
+     Group.create({name:req.body.name, description:req.body.description})
+     .then(group =>{
+         res.json({
+             message: 'new group created'
+         })
+     })
+     .catch( err => {
+         res.status(500) .json({
+             error: err,
+         })
+     })
+} 
+
+exports.getGroups = (req,res,next) => {
+    Group.findOne({ where:{name:req.body.groupId}})
 }
 
- */
+
+
+
+exports.wellAgain = (req,res,next) => {    
+    var tok = 
+    req.headers.authorization 
+    console.log(tok)
+   /*  req.body.token ||
+    req.query.token ||
+    req.headers['x-access-token'] ||
+    req.headers.authorization ||
+   // req.cookies.token ||
+    req.header('Authorization').replace('Bearer ', '')
+    //req.token; */
+   
+        jwt.verify(tok,'nosayaba', function(err, decoded) {
+        if (err) {
+            return res.status(401).send('Unauthorized: Invalid token');
+        } else {
+        // req.email = decoded.email;
+            next();
+        }
+        });
+    }    
+
+

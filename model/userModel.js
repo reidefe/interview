@@ -18,6 +18,12 @@ module.exports = (sequelize,type) => {
             type: type.STRING
         },
         texts: type.TEXT,
+      /*   contacts: {
+            type: type.INTEGER,
+            validate:{
+                min: 5,
+            }
+        } */
        /*  groups:{
             type:Sequelize.UUID
         },
@@ -26,4 +32,4 @@ module.exports = (sequelize,type) => {
         } */
        })
             
-}
+} 

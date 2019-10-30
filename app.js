@@ -12,9 +12,12 @@ var contrl = require('./controller/index')
 var passport = require('passport')
 var LocalStrategy = require('passport-local').Strategy;
 
+const https = require('https')
+const fs = require('fs')
+
 
 const events = require('./controller/handleEmits')
-const auth = require('./controller/passportSetup')
+const auth = require('./controller/checkAuth')
 
 var { User, Group, Cont, Msg} = require('./model/')
 
@@ -23,11 +26,8 @@ app.use(bodyparser.json())
 
 
 http.listen(port,() =>{
-    console.log('server started')})
-
-
-
-
+    console.log('server started')
+})
 
 
 app.get('/', function(req, res,) {
@@ -39,32 +39,31 @@ app.post('/login',  contrl.login, function(req, res){
 } )
 app.post('/signup', contrl.signup)
 
-/* 
-app.post('/makegroup', passport.use('jwt', {session: false}),  //contrl.createGroup
-    
-        contrl.createGroup
- 
-)  */
 app.get('/users', contrl.getall)
 app.get('/generalgroup?', function(req,res){
     res.sendFile(__dirname+ '/index.html')
 })
+app.post('/makegroups', auth.wellAgain,  contrl.createGroup)
 
-app.post('/makegroups',  contrl.createGroup)
-
-
-
-
-
-io.on('connection', function(socket){   
-
+io.on('connection', function(socket){ 
     //general group messaging
+    socket.join('general group')
     socket.on('general group message', function(msgs){
         console.log(msgs)
         io.emit('general group message',msgs)   
-        Group.create({where:{name:'general'}, defaults:{message:msgs},  include:[User]}) .then(group =>{
-                
+        Group.create({where:{name:'general'}, defaults:{message:msgs},  include:[User]}) .then(group =>{                
         })
     })   
 })
+/* 
 
+//first test at making a private msg in socket.io
+const pv = io.of('/private-chat')
+pv.on('connection', function(socket){
+    socket.join('group message')
+    socket.on('private-chat', function(msgs){
+        io.emit('private-chat', msgs )
+    })        
+})
+
+ */
